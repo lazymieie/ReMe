@@ -27,6 +27,8 @@ from .memory.vector_based import (
     ProceduralSummarizer,
     ReMeRetriever,
     ReMeSummarizer,
+    StateRetriever,
+    StateSummarizer,
     ToolRetriever,
     ToolSummarizer,
 )
@@ -52,6 +54,7 @@ class ReMe(Application):
         default_token_counter_config: dict | None = None,
         target_user_names: list[str] | None = None,
         target_task_names: list[str] | None = None,
+        target_state_names: list[str] | None = None,
         target_tool_names: list[str] | None = None,
         enable_profile: bool = True,
         **kwargs,
@@ -102,6 +105,11 @@ class ReMe(Application):
                 assert name not in memory_target_type_mapping, f"target_task_names={name} is already used."
                 memory_target_type_mapping[name] = MemoryType.PROCEDURAL
 
+        if target_state_names:
+            for name in target_state_names:
+                assert name not in memory_target_type_mapping, f"target_state_names={name} is already used."
+                memory_target_type_mapping[name] = MemoryType.STATE
+
         if target_tool_names:
             for name in target_tool_names:
                 assert name not in memory_target_type_mapping, f"target_tool_names={name} is already used."
@@ -127,13 +135,15 @@ class ReMe(Application):
     def _resolve_memory_target(
         user_name: str = "",
         task_name: str = "",
+        state_name: str = "",
         tool_name: str = "",
     ) -> tuple[MemoryType, str]:
-        """Resolve memory type and target from user_name, task_name, or tool_name.
+        """Resolve memory type and target from user_name, task_name, state_name, or tool_name.
 
         Args:
             user_name: User name for personal memory
             task_name: Task name for procedural memory
+            state_name: State name for state memory
             tool_name: Tool name for tool memory
 
         Returns:
@@ -145,20 +155,33 @@ class ReMe(Application):
         if user_name:
             memory_type = MemoryType.PERSONAL
             memory_target = user_name
-            assert not task_name and not tool_name, "Cannot add task and tool memory when user memory is specified"
+            assert not task_name and not state_name and not tool_name, (
+                "Cannot add task, state, and tool memory when user memory is specified"
+            )
 
         elif task_name:
             memory_type = MemoryType.PROCEDURAL
             memory_target = task_name
-            assert not user_name and not tool_name, "Cannot add user and tool memory when task memory is specified"
+            assert not user_name and not state_name and not tool_name, (
+                "Cannot add user, state, and tool memory when task memory is specified"
+            )
+
+        elif state_name:
+            memory_type = MemoryType.STATE
+            memory_target = state_name
+            assert not user_name and not task_name and not tool_name, (
+                "Cannot add user, task, and tool memory when state memory is specified"
+            )
 
         elif tool_name:
             memory_type = MemoryType.TOOL
             memory_target = tool_name
-            assert not user_name and not task_name, "Cannot add user and task memory when tool memory is specified"
+            assert not user_name and not task_name and not state_name, (
+                "Cannot add user, task, and state memory when tool memory is specified"
+            )
 
         else:
-            raise RuntimeError("Must specify user_name, task_name, or tool_name")
+            raise RuntimeError("Must specify user_name, task_name, state_name, or tool_name")
 
         return memory_type, memory_target
 
@@ -168,6 +191,7 @@ class ReMe(Application):
         description: str = "",
         user_name: str | list[str] = "",
         task_name: str | list[str] = "",
+        state_name: str | list[str] = "",
         tool_name: str | list[str] = "",
         enable_thinking_params: bool = True,
         version: str = "default",
@@ -176,7 +200,7 @@ class ReMe(Application):
         llm_config_name: str = "default",
         **kwargs,
     ) -> str | dict:
-        """Summarize personal, procedural and tool memories for the given context."""
+        """Summarize personal, procedural, state and tool memories for the given context."""
         format_messages: list[Message] = []
         for message in messages:
             if isinstance(message, dict):
@@ -260,6 +284,24 @@ class ReMe(Application):
                 ),
             ],
         )
+        state_summarizer: BaseMemoryAgent = StateSummarizer(
+            llm=llm_config_name,
+            tools=[
+                AddDraftAndRetrieveSimilarMemory(
+                    enable_thinking_params=enable_thinking_params,
+                    enable_memory_target=False,
+                    enable_when_to_use=False,
+                    enable_multiple=True,
+                    top_k=retrieve_top_k,
+                ),
+                AddMemory(
+                    enable_thinking_params=enable_thinking_params,
+                    enable_memory_target=False,
+                    enable_when_to_use=False,
+                    enable_multiple=True,
+                ),
+            ],
+        )
 
         memory_agents = []
         memory_targets = []
@@ -290,6 +332,18 @@ class ReMe(Application):
                 raise RuntimeError("task_name must be str or list[str]")
             memory_agents.append(procedural_summarizer)
 
+        if state_name:
+            if isinstance(state_name, str):
+                self._add_meta_memory(MemoryType.STATE, state_name)
+                memory_targets.append(state_name)
+            elif isinstance(state_name, list):
+                for name in state_name:
+                    self._add_meta_memory(MemoryType.STATE, name)
+                    memory_targets.append(name)
+            else:
+                raise RuntimeError("state_name must be str or list[str]")
+            memory_agents.append(state_summarizer)
+
         if tool_name:
             if isinstance(tool_name, str):
                 self._add_meta_memory(MemoryType.TOOL, tool_name)
@@ -303,7 +357,7 @@ class ReMe(Application):
             memory_agents.append(tool_summarizer)
 
         if not memory_agents:
-            memory_agents = [personal_summarizer, procedural_summarizer, tool_summarizer]
+            memory_agents = [personal_summarizer, procedural_summarizer, state_summarizer, tool_summarizer]
 
         reme_summarizer: BaseMemoryAgent = ReMeSummarizer(
             tools=[AddHistory(), DelegateTask(memory_agents=memory_agents)],
@@ -329,6 +383,7 @@ class ReMe(Application):
         messages: list[dict] | None = None,
         user_name: str | list[str] = "",
         task_name: str | list[str] = "",
+        state_name: str | list[str] = "",
         tool_name: str | list[str] = "",
         enable_thinking_params: bool = True,
         version: str = "default",
@@ -338,7 +393,7 @@ class ReMe(Application):
         llm_config_name: str = "default",
         **kwargs,
     ) -> str | dict:
-        """Retrieve relevant personal, procedural and tool memories for a query."""
+        """Retrieve relevant personal, procedural, state and tool memories for a query."""
 
         if version == "default":
             personal_retriever_tools = []
@@ -401,6 +456,21 @@ class ReMe(Application):
                 ),
             ],
         )
+        state_retriever: BaseMemoryAgent = StateRetriever(
+            llm=llm_config_name,
+            tools=[
+                RetrieveMemory(
+                    top_k=retrieve_top_k,
+                    enable_thinking_params=enable_thinking_params,
+                    enable_time_filter=False,
+                    enable_multiple=True,
+                ),
+                ReadHistory(
+                    enable_thinking_params=enable_thinking_params,
+                    enable_multiple=True,
+                ),
+            ],
+        )
 
         memory_agents = []
         memory_targets = []
@@ -428,6 +498,18 @@ class ReMe(Application):
                 raise RuntimeError("task_name must be str or list[str]")
             memory_agents.append(procedural_retriever)
 
+        if state_name:
+            if isinstance(state_name, str):
+                self._add_meta_memory(MemoryType.STATE, state_name)
+                memory_targets.append(state_name)
+            elif isinstance(state_name, list):
+                for name in state_name:
+                    self._add_meta_memory(MemoryType.STATE, name)
+                    memory_targets.append(name)
+            else:
+                raise RuntimeError("state_name must be str or list[str]")
+            memory_agents.append(state_retriever)
+
         if tool_name:
             if isinstance(tool_name, str):
                 self._add_meta_memory(MemoryType.TOOL, tool_name)
@@ -441,7 +523,7 @@ class ReMe(Application):
             memory_agents.append(tool_retriever)
 
         if not memory_agents:
-            memory_agents = [personal_retriever, procedural_retriever, tool_retriever]
+            memory_agents = [personal_retriever, procedural_retriever, state_retriever, tool_retriever]
 
         reme_retriever: BaseMemoryAgent = ReMeRetriever(
             tools=[DelegateTask(memory_agents=memory_agents)],
@@ -466,6 +548,7 @@ class ReMe(Application):
         memory_content: str,
         user_name: str = "",
         task_name: str = "",
+        state_name: str = "",
         tool_name: str = "",
         when_to_use: str = "",
         message_time: str = "",
@@ -480,6 +563,7 @@ class ReMe(Application):
             memory_content: The content of the memory to add
             user_name: User name for personal memory
             task_name: Task name for procedural memory
+            state_name: State name for state memory
             tool_name: Tool name for tool memory
             when_to_use: Description of when this memory should be used
             message_time: Timestamp of the message
@@ -491,7 +575,7 @@ class ReMe(Application):
         Returns:
             MemoryNode: The created memory node
         """
-        memory_type, memory_target = self._resolve_memory_target(user_name, task_name, tool_name)
+        memory_type, memory_target = self._resolve_memory_target(user_name, task_name, state_name, tool_name)
         self._add_meta_memory(memory_type, memory_target)
 
         handler = self.get_memory_handler(memory_target)
@@ -541,6 +625,7 @@ class ReMe(Application):
         memory_id: str,
         user_name: str = "",
         task_name: str = "",
+        state_name: str = "",
         tool_name: str = "",
         memory_content: str | None = None,
         when_to_use: str | None = None,
@@ -556,6 +641,7 @@ class ReMe(Application):
             memory_id: The ID of the memory to update
             user_name: User name for personal memory
             task_name: Task name for procedural memory
+            state_name: State name for state memory
             tool_name: Tool name for tool memory
             memory_content: New content for the memory (optional)
             when_to_use: New description of when to use (optional)
@@ -568,7 +654,7 @@ class ReMe(Application):
         Returns:
             MemoryNode: The updated memory node
         """
-        memory_type, memory_target = self._resolve_memory_target(user_name, task_name, tool_name)
+        memory_type, memory_target = self._resolve_memory_target(user_name, task_name, state_name, tool_name)
         self._add_meta_memory(memory_type, memory_target)
 
         handler = self.get_memory_handler(memory_target)
@@ -588,6 +674,7 @@ class ReMe(Application):
         self,
         user_name: str = "",
         task_name: str = "",
+        state_name: str = "",
         tool_name: str = "",
         filters: dict | None = None,
         limit: int | None = None,
@@ -599,6 +686,7 @@ class ReMe(Application):
         Args:
             user_name: User name for personal memory
             task_name: Task name for procedural memory
+            state_name: State name for state memory
             tool_name: Tool name for tool memory
             filters: Additional filters to apply (optional)
             limit: Maximum number of results to return (optional)
@@ -608,7 +696,7 @@ class ReMe(Application):
         Returns:
             list[MemoryNode]: List of memory nodes
         """
-        memory_type, memory_target = self._resolve_memory_target(user_name, task_name, tool_name)
+        memory_type, memory_target = self._resolve_memory_target(user_name, task_name, state_name, tool_name)
         self._add_meta_memory(memory_type, memory_target)
 
         handler = self.get_memory_handler(memory_target)

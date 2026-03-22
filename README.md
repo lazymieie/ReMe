@@ -34,6 +34,12 @@ conversations) and **stateless sessions** (new sessions cannot inherit history a
 ReMe gives agents **real memory** — old conversations are automatically compacted, important information is persistently
 stored, and relevant context is automatically recalled in future interactions.
 
+In the vector memory system, ReMe currently supports four long-term memory types:
+- `personal`: user preferences, background, and long-term profile
+- `procedural`: task-level experience, workflows, and success/failure patterns
+- `state`: state-level experience, intermediate checkpoints, and transition signals
+- `tool`: tool-level experience, parameter patterns, and error-handling strategies
+
 <details>
 <summary><b>What you can do with ReMe</b></summary>
 
@@ -673,4 +679,3 @@ understand users, accumulate experience, and continuously evolve.
 ## 📈 Star history
 
 [![Star History Chart](https://api.star-history.com/svg?repos=agentscope-ai/ReMe&type=Date)](https://www.star-history.com/#agentscope-ai/ReMe&Date)
-

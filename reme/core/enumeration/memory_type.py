@@ -23,6 +23,9 @@ class MemoryType(str, Enum):
     # How‑to knowledge, workflows, and step‑by‑step instructions
     PROCEDURAL = "procedural"
 
+    # State-specific experience about environment, progress, or intermediate conditions
+    STATE = "state"
+
     # Information learned about tools, APIs, and their usage patterns
     TOOL = "tool"
 

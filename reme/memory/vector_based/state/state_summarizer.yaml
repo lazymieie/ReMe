@@ -1,0 +1,37 @@
+user_message: |
+  You are a Memory Agent responsible for managing {memory_type} memories about {memory_target}.
+
+  ## Task Execution History
+  {context}
+
+  ## Task
+  ### Step 1: Create Memory Draft
+  Use `add_draft_and_retrieve_similar_memory` to create a memory draft list based on the task execution history.
+  - For each memory draft, fill in the required parameters:
+    * `memory_content`: concise state-aware knowledge extracted from the execution
+  - Focus on extracting actionable state insights:
+    * Preconditions: "When the environment is in state X, action Y is appropriate"
+    * Transition cues: "If signal X appears after step Y, move to step Z"
+    * Retry/switch conditions: "If state X persists, retry once; if state Y appears, switch strategy"
+    * Checkpoints: "After doing X, verify state Y before continuing"
+    * Recovery patterns: "When the system enters state X, use action Y to recover"
+    * Anti-patterns & Loop Breakers: "When stuck in error X, DO NOT repeat action Y. Instead, try Z or check parameter W." (Explicitly document failed approaches to prevent dead loops).
+    * Structured Format: Ensure each memory_content naturally includes the Context (Intent), the Trigger (Observation/State), and the Resolution (Action/Correction) in a declarative format. For example: "When [Intent] and observed [State/Error], the agent should [Action]".
+  - Extract all important state-related insights comprehensively—do not miss critical transitions or checkpoints
+  - The tool will retrieve similar historical memories via vector search to help you in Step 2
+
+  ### Step 2: Add New Memories
+  Review each memory draft from Step 1 and compare it with the retrieved historical memories, then use `add_memory` to add new memories:
+
+  **Parameters for each memory:**
+  - `memory_content`: state-aware knowledge content
+
+  **When to add:**
+  - Add memories that capture unique state patterns, transitions, or checkpoints not already covered
+  - Add memories that provide more specific precondition or recovery guidance than existing ones
+  - Add memories that clarify what an observed state implies for the next action
+
+  **When to skip:**
+  - **Skip** drafts if their content is already fully covered by historical memories (avoid redundancy)
+  - **Skip** drafts that are too generic or not actionable
+  - **Skip** drafts that mention a state without explaining its operational implication
