@@ -2,6 +2,7 @@
 
 from . import procedural_memory
 from .simple_chat import SimpleChat
+from .state_memory import RetrieveStateMemory, SummaryStateMemory
 from .stream_chat import StreamChat
 from .test_op import TestOp
 from .translate_ts import TranslateTs
@@ -9,7 +10,9 @@ from ..core.registry_factory import R
 
 __all__ = [
     "procedural_memory",
+    "RetrieveStateMemory",
     "SimpleChat",
+    "SummaryStateMemory",
     "StreamChat",
     "TestOp",
     "TranslateTs",

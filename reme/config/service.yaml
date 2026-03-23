@@ -85,6 +85,72 @@ flows:
       required:
         - trajectories
 
+  retrieve_state_memory:
+    flow_content: RetrieveStateMemory()
+    description: "Retrieve state-aware memories for a given state target and query"
+    parameters:
+      type: object
+      properties:
+        query:
+          type: string
+          description: "The query string for retrieving relevant state memories. Either query or messages must be provided."
+        messages:
+          type: array
+          description: "Optional message list used to build retrieval context. Either query or messages must be provided."
+        state_name:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: "Target state memory name or list of state names."
+        description:
+          type: string
+          description: "Optional description to prepend to retrieval context."
+        enable_thinking_params:
+          type: boolean
+          description: "Whether to enable thinking parameters for retrieval tools (default: true)."
+        retrieve_top_k:
+          type: integer
+          description: "Number of candidates to retrieve per search query (default: 20)."
+        llm_config_name:
+          type: string
+          description: "LLM config name to use (default: default)."
+      required:
+        - state_name
+
+  summary_state_memory:
+    flow_content: SummaryStateMemory()
+    description: "Summarize conversation messages into reusable state-aware memories"
+    parameters:
+      type: object
+      properties:
+        messages:
+          type: array
+          description: "A list of conversation messages with time_created fields."
+        state_name:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: "Target state memory name or list of state names."
+        description:
+          type: string
+          description: "Optional description for the message history."
+        enable_thinking_params:
+          type: boolean
+          description: "Whether to enable thinking parameters for summary tools (default: true)."
+        retrieve_top_k:
+          type: integer
+          description: "Number of similar memories retrieved for draft comparison (default: 20)."
+        llm_config_name:
+          type: string
+          description: "LLM config name to use (default: default)."
+      required:
+        - messages
+        - state_name
+
   add_task_memory:
     flow_content: MemoryAddition()
     description: "Add task memories to the vector store"
@@ -203,4 +269,3 @@ token_counters:
     backend: hf
     model_name: Qwen/Qwen3-Coder-30B-A3B-Instruct
     use_mirror: true
-

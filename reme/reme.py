@@ -203,8 +203,6 @@ class ReMe(Application):
         """Summarize personal, procedural, state and tool memories for the given context."""
         format_messages: list[Message] = []
         for message in messages:
-            if isinstance(message, dict):
-                assert message.get("time_created"), "message must have time_created field."
             message = Message(**message)
             format_messages.append(message)
 
