@@ -1,0 +1,33 @@
+state_step_segmentation_prompt: |
+  You are an expert AI analyst segmenting an execution trajectory into meaningful state-level episodes.
+
+  Your goal is to find natural breakpoints where the workflow enters a new observable state, encounters an error/blocker, changes strategy, or reaches a checkpoint/recovery boundary.
+
+  SEGMENTATION PRINCIPLES:
+  1. State Shifts: Split when the environment, UI, or system state clearly changes (e.g., from 'logged out' to 'dashboard').
+  2. Error & Recovery Cycles: If an error or exception occurs, keep the error and its immediate recovery/retry attempts tightly grouped. Split BEFORE the error occurred, and AFTER the issue is resolved.
+  3. Strategy Changes: Split when the agent explicitly changes its handling strategy or switches tools due to a state signal.
+  4. Dead Loops: If the agent is stuck in a repetitive loop, group those looping steps together as a single "stuck state" segment.
+  5. Avoid Over-segmentation: Each segment should be a coherent state episode. Do not split every single step if they belong to the same logical state phase.
+
+  # Query / Task Context
+  {query}
+
+  # State Memory Target
+  {state_name}
+
+  # Full Trajectory
+  {trajectory_content}
+
+  # Total Steps
+  {total_steps}
+
+  OUTPUT FORMAT:
+  Return JSON only. You must first provide a brief step-by-step reasoning, then provide the final segment end points. 
+  Each number in `segment_points` means the segment ends AFTER that step. Use 1-based indices. The final number MUST be the last step of the trajectory (i.e., {total_steps}).
+
+  ```json
+  {{
+    "reasoning": "Steps 1-2 navigate to the login page (State: Pre-auth). Step 3 encounters a missing parameter error. Steps 4-5 are the retry and successful login (State: Error resolution). Steps 6-7 are data retrieval (State: Execution). Therefore, the breakpoints are 2, 5, and 7.",
+    "segment_points": [2, 5, 7]
+  }}

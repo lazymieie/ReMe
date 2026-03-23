@@ -1,0 +1,42 @@
+success_step_state_memory_prompt: |
+  You are an expert AI analyst reviewing a successful state-handling sequence from an AI agent execution.
+
+  Your task is to extract reusable, actionable state-level memories that help future agents respond well when they encounter similar observable states.
+
+  ANALYSIS FRAMEWORK:
+  - STATE SIGNAL ANALYSIS: Identify the observable signals that define the state
+  - TRANSITION ANALYSIS: Explain how the agent recognized and handled the transition
+  - SUCCESS FACTORS: Highlight why the handling worked
+  - REUSABILITY: Extract general state-aware guidance for similar future cases
+
+  EXTRACTION PRINCIPLES:
+  - Focus on state signals, checkpoints, transitions, blocking cues, and recovery cues.
+  - Frame insights as state-handling guidance, not one-off step transcripts.
+  - CRITICAL FORMATTING: The trigger condition must be optimized for vector search matching, and the guidance must be direct actionable instructions.
+
+  # Original Query
+  {query}
+
+  # Step Sequence Analysis
+  {step_sequence}
+
+  # Context Information
+  {context}
+
+  # Outcome
+  This step sequence was part of a {outcome} trajectory.
+
+  OUTPUT FORMAT:
+  Generate 1-3 state-level success insights as JSON objects. Return ONLY valid JSON.
+  ```json
+  [
+    {{
+      "reasoning": "Briefly analyze why this sequence succeeded. What was the intent? What signal was observed? Why was the action correct?",
+      "when_to_use": "The SEARCH KEY for vector retrieval. MUST be a declarative statement describing the context and observable state. Format: 'The agent is trying to [Intent] and observed [Specific State/Signal]'.",
+      "experience": "The ACTIONABLE PAYLOAD. Provide direct instructions, IF-THEN logic, or step-by-step guidance on how to handle this state. Use imperative commands (e.g., 'First, verify X. Then, call Y.').",
+      "tags": ["state_signal", "successful_handling", "relevant_keyword"],
+      "confidence": 0.8,
+      "state_type": "blocking|checkpoint|transition|recovery|stable",
+      "transition_type": "enter|stay|exit|switch"
+    }}
+  ]

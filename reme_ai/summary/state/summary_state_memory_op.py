@@ -1,4 +1,4 @@
-"""State memory summary operation."""
+"""Backward-compatible state memory summary operation."""
 
 import json
 from typing import List
@@ -18,13 +18,19 @@ DEFAULT_STATE_NAME = "default_state"
 
 @C.register_op()
 class SummaryStateMemoryOp(BaseAsyncOp):
-    """Summarize message trajectories into reusable state memories."""
+    """Fallback single-step state summary op."""
 
     file_path: str = __file__
+    DEFAULT_SUMMARY_EXAMPLE: str = """[
+  {
+    "when_to_use": "When the page remains on the login form and a captcha popup appears after submit",
+    "memory": "This usually indicates the workflow has entered a verification-blocked state rather than a normal retry state. Do not keep resubmitting. Check the page state, wait for verification, or refresh before trying again."
+  }
+]"""
 
     async def async_execute(self):
-        messages: list = self.context.get("messages", [])
         state_name: str = self.context.get("state_name", "") or DEFAULT_STATE_NAME
+        messages: list = self.context.get("messages", [])
 
         if not messages:
             self.context.response.answer = "messages is required"
@@ -33,7 +39,6 @@ class SummaryStateMemoryOp(BaseAsyncOp):
 
         normalized_messages: List[Message] = [Message(**x) if isinstance(x, dict) else x for x in messages]
         memory_list = await self.summary_messages(normalized_messages, state_name)
-
         self.context.response.answer = json.dumps([x.model_dump() for x in memory_list], ensure_ascii=False)
         self.context.response.metadata["memory_list"] = memory_list
         for memory in memory_list:
@@ -42,14 +47,48 @@ class SummaryStateMemoryOp(BaseAsyncOp):
             )
 
     async def summary_messages(self, messages: List[Message], state_name: str) -> List[BaseMemory]:
-        """Extract state memories from messages."""
+        """Extract state memories from plain message history."""
         execution_process = merge_messages_content(messages)
-        summary_prompt = self.prompt_format(
-            prompt_name="summary_prompt",
-            execution_process=execution_process,
-            state_name=state_name,
-            summary_example=self.get_prompt("summary_example"),
-        )
+        try:
+            summary_example = self.get_prompt("summary_example")
+        except Exception:
+            summary_example = self.DEFAULT_SUMMARY_EXAMPLE
+
+        try:
+            summary_prompt = self.prompt_format(
+                prompt_name="summary_prompt",
+                execution_process=execution_process,
+                state_name=state_name,
+                query=self.context.get("description", ""),
+                summary_example=summary_example,
+            )
+        except Exception:
+            summary_prompt = f"""You are a state memory extraction expert.
+
+Below is an execution trajectory:
+{execution_process}
+
+The target state memory pool is:
+{state_name}
+
+Task / query context:
+{self.context.get("description", "")}
+
+Your task is to summarize reusable state-aware memories from this trajectory.
+
+Focus on:
+- observable states, signals, and checkpoints
+- state transitions and what they imply
+- retry / switch / recovery conditions
+- anti-patterns and loop-breaking conditions
+
+Each memory must describe:
+1. when_to_use: the observable state / trigger condition
+2. memory: what the state means and what action should be taken
+
+Return JSON only. Follow this format:
+{summary_example}
+"""
 
         def parse_content(message: Message):
             content = message.content

@@ -1,6 +1,9 @@
 summary_prompt: |
   You are a state memory extraction expert.
 
+  Task / query context:
+  {query}
+
   Below is an execution trajectory:
   {execution_process}
 

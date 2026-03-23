@@ -71,8 +71,8 @@ flow:
         required: false
 
   summary_state_memory:
-    flow_content: SummaryStateMemoryOp() >> UpdateVectorStoreOp()
-    description: "Summarizes conversation messages into reusable state-aware memories"
+    flow_content: StateTrajectoryPreprocessOp(success_threshold=1.0) >> StateTrajectorySegmentationOp() >> (StateSuccessExtractionOp()|StateFailureExtractionOp()|StateComparativeExtractionOp(enable_soft_comparison=True, enable_similarity_comparison=True)) >> StateMemoryValidationOp(validation_threshold=0.5) >> StateMemoryDeduplicationOp() >> UpdateVectorStoreOp()
+    description: "Summarizes trajectories into reusable state-level memories"
     input_schema:
       workspace_id:
         type: string
@@ -82,10 +82,14 @@ flow:
         type: string
         description: "state memory target name, defaults to default_state when omitted or empty"
         required: false
+      trajectories:
+        type: array
+        description: "A list of conversation trajectory information, including message content and score."
+        required: false
       messages:
         type: array
-        description: "A list of conversation messages"
-        required: true
+        description: "Optional plain message list. If provided without trajectories, it will be treated as one successful trajectory."
+        required: false
 
   retrieve_personal_memory:
     flow_content: SetQueryOp() >> (ExtractTimeOp() | (RetrieveMemoryOp() >> SemanticRankOp())) >> FuseRerankOp()

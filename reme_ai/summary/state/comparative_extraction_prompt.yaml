@@ -1,0 +1,73 @@
+soft_comparative_step_state_memory_prompt: |
+  You are an expert AI analyst comparing higher-scoring and lower-scoring state-handling sequences.
+
+  Your task is to identify what made the higher-scoring trajectory better at recognizing, interpreting, or handling the relevant states.
+
+  SOFT COMPARATIVE ANALYSIS FRAMEWORK:
+  - SIGNAL QUALITY: Compare how clearly each trajectory recognized the state signals
+  - TRANSITION HANDLING: Compare how each trajectory reacted to state changes
+  - LOOP / STALL MANAGEMENT: Analyze how one approach avoided getting stuck
+  - OPTIMIZATION INSIGHTS: Extract rules for better state-aware handling
+
+  EXTRACTION PRINCIPLES:
+  - Focus on the divergence point where the higher-scoring trajectory made a superior state-aware decision.
+  - CRITICAL FORMATTING: The trigger condition must be optimized for vector search matching. The guidance must clearly contrast the suboptimal action with the optimized action.
+
+  # Higher-Scoring Step Sequence (Score: {higher_score})
+  {higher_steps}
+
+  # Lower-Scoring Step Sequence (Score: {lower_score})
+  {lower_steps}
+
+  OUTPUT FORMAT:
+  Generate 1-2 comparative state insights as JSON objects. Return ONLY valid JSON.
+  ```json
+  [
+    {{
+      "reasoning": "Briefly analyze the divergence. What shared state did both encounter? Why was the higher-scoring agent's reaction more efficient or robust?",
+      "when_to_use": "The SEARCH KEY for vector retrieval. MUST be a declarative statement describing the shared context and state. Format: 'The agent is trying to [Intent] and observed [Specific State/Signal]'.",
+      "experience": "The ACTIONABLE PAYLOAD. Provide direct comparative instructions. Format: 'To handle this state efficiently, DO NOT [suboptimal lower-scoring action]. INSTEAD, [optimized higher-scoring action].'",
+      "tags": ["comparative_state_analysis", "state_optimization", "efficiency"],
+      "confidence": 0.8,
+      "state_type": "blocking|checkpoint|transition|recovery|stable"
+    }}
+  ]
+  ```
+
+hard_comparative_step_state_memory_prompt: |
+  You are an expert AI analyst comparing successful and failed state-handling sequences.
+
+  Your task is to identify the state-level differences that separate successful handling from failure.
+
+  COMPARATIVE ANALYSIS FRAMEWORK:
+  - SIGNAL CONTRAST: Compare which cues were correctly noticed vs missed
+  - DECISION CONTRAST: Compare different reactions to similar states
+  - TRANSITION TIMING: Analyze whether actions were taken too early, too late, or at the right time
+  - SUCCESS FACTORS: Extract rules that help future agents choose the better path
+
+  EXTRACTION PRINCIPLES:
+  - Focus obsessively on the EXACT DIVERGENCE POINT where the successful agent survived and the failed agent crashed.
+  - CRITICAL FORMATTING: The trigger condition must be optimized for vector search matching. The guidance must act as an absolute survival rule.
+
+  # Successful Step Sequence
+  {success_steps}
+
+  # Failed Step Sequence
+  {failure_steps}
+
+  # Similarity Score: {similarity_score}
+
+  OUTPUT FORMAT:
+  Generate 1-2 comparative state insights as JSON objects. Return ONLY valid JSON.
+  ```json
+  [
+    {{
+      "reasoning": "Identify the exact divergence point. What identical state/error did both face? Why did the successful action work while the failed action led to a dead end?",
+      "when_to_use": "The SEARCH KEY for vector retrieval. MUST be a declarative statement describing the exact divergence state. Format: 'The agent is trying to [Intent] and observed [Specific Shared Error/State]'.",
+      "experience": "The ACTIONABLE PAYLOAD. Provide absolute survival instructions. Format: 'CRITICAL: DO NOT [Failed action or trap]. INSTEAD, [Successful recovery action] to ensure task progression.'",
+      "tags": ["state_comparison", "success_failure_gap", "survival_rule"],
+      "confidence": 0.9,
+      "state_type": "blocking|checkpoint|transition|recovery|stable"
+    }}
+  ]
+  ```

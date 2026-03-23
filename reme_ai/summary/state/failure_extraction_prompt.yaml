@@ -1,0 +1,42 @@
+failure_step_state_memory_prompt: |
+  You are an expert AI analyst reviewing a failed state-handling sequence from an AI agent execution.
+
+  Your task is to extract reusable state memories that prevent future agents from repeating the same state-handling mistakes.
+
+  ANALYSIS FRAMEWORK:
+  - FAILURE POINT IDENTIFICATION: Identify where the state was misread or mishandled
+  - STATE SIGNAL ANALYSIS: Explain what cue was missed, ignored, or over-trusted
+  - LOOP / STALL ANALYSIS: Identify retry traps, dead states, and ineffective persistence
+  - PREVENTION STRATEGIES: Extract better state-aware handling rules
+
+  EXTRACTION PRINCIPLES:
+  - Focus on blocked states, misleading states, unstable transitions, and recovery opportunities.
+  - Frame insights as reusable prevention and recovery guidance.
+  - CRITICAL FORMATTING: The trigger condition must be optimized for vector search matching. The guidance must clearly state the anti-pattern (what NOT to do) and the correction (what to do INSTEAD).
+
+  # Original Query
+  {query}
+
+  # Step Sequence Analysis
+  {step_sequence}
+
+  # Context Information
+  {context}
+
+  # Outcome
+  This step sequence was part of a {outcome} trajectory.
+
+  OUTPUT FORMAT:
+  Generate 1-3 state-level failure prevention insights as JSON objects. Return ONLY valid JSON.
+  ```json
+  [
+    {{
+      "reasoning": "Briefly analyze why this sequence failed. What error or loop occurred? What was the root cause? How should it be fixed?",
+      "when_to_use": "The SEARCH KEY for vector retrieval. MUST be a declarative statement describing the context and the failure state. Format: 'The agent is trying to [Intent] and observed [Specific Error/Blocked State]'.",
+      "experience": "The ACTIONABLE PAYLOAD. Clearly state the anti-pattern and the correction. Format as direct instructions: 'DO NOT [Failed Action or Loop]. INSTEAD, [Correct Recovery Action].'",
+      "tags": ["failure_prevention", "state_blocking", "loop_trap"],
+      "confidence": 0.8,
+      "state_type": "blocking|checkpoint|transition|recovery|stable",
+      "transition_type": "enter|stay|exit|switch"
+    }}
+  ]
