@@ -37,6 +37,8 @@ from .memory.vector_based import (
 class ReMe(Application):
     """ReMe with config file support and flow execution methods."""
 
+    DEFAULT_STATE_NAME: str = "default_state"
+
     def __init__(
         self,
         *args,
@@ -332,12 +334,14 @@ class ReMe(Application):
 
         if state_name:
             if isinstance(state_name, str):
-                self._add_meta_memory(MemoryType.STATE, state_name)
-                memory_targets.append(state_name)
+                state_target = state_name or self.DEFAULT_STATE_NAME
+                self._add_meta_memory(MemoryType.STATE, state_target)
+                memory_targets.append(state_target)
             elif isinstance(state_name, list):
                 for name in state_name:
-                    self._add_meta_memory(MemoryType.STATE, name)
-                    memory_targets.append(name)
+                    state_target = name or self.DEFAULT_STATE_NAME
+                    self._add_meta_memory(MemoryType.STATE, state_target)
+                    memory_targets.append(state_target)
             else:
                 raise RuntimeError("state_name must be str or list[str]")
             memory_agents.append(state_summarizer)
@@ -498,12 +502,14 @@ class ReMe(Application):
 
         if state_name:
             if isinstance(state_name, str):
-                self._add_meta_memory(MemoryType.STATE, state_name)
-                memory_targets.append(state_name)
+                state_target = state_name or self.DEFAULT_STATE_NAME
+                self._add_meta_memory(MemoryType.STATE, state_target)
+                memory_targets.append(state_target)
             elif isinstance(state_name, list):
                 for name in state_name:
-                    self._add_meta_memory(MemoryType.STATE, name)
-                    memory_targets.append(name)
+                    state_target = name or self.DEFAULT_STATE_NAME
+                    self._add_meta_memory(MemoryType.STATE, state_target)
+                    memory_targets.append(state_target)
             else:
                 raise RuntimeError("state_name must be str or list[str]")
             memory_agents.append(state_retriever)

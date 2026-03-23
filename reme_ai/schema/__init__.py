@@ -10,6 +10,7 @@ from flowllm.core.schema import Message, Trajectory  # noqa
 from reme_ai.schema.memory import (
     BaseMemory,
     PersonalMemory,
+    StateMemory,
     TaskMemory,
     ToolCallResult,
     ToolMemory,
@@ -26,6 +27,7 @@ __all__ = [
     "BaseMemory",
     "TaskMemory",
     "PersonalMemory",
+    "StateMemory",
     "ToolMemory",
     "ToolCallResult",
     # Utility functions

@@ -1,0 +1,31 @@
+summary_prompt: |
+  You are a state memory extraction expert.
+
+  Below is an execution trajectory:
+  {execution_process}
+
+  The target state memory pool is:
+  {state_name}
+
+  Your task is to summarize reusable state-aware memories from this trajectory.
+
+  Focus on:
+  - observable states, signals, and checkpoints
+  - state transitions and what they imply
+  - retry / switch / recovery conditions
+  - anti-patterns and loop-breaking conditions
+
+  Each memory must describe:
+  1. when_to_use: the observable state / trigger condition
+  2. memory: what the state means and what action should be taken
+
+  Return JSON only. Follow this format:
+  {summary_example}
+
+summary_example: |
+  [
+    {{
+      "when_to_use": "When the page remains on the login form and a captcha popup appears after submit",
+      "memory": "This usually indicates the workflow has entered a verification-blocked state rather than a normal retry state. Do not keep resubmitting. Check the page state, wait for verification, or refresh before trying again."
+    }}
+  ]

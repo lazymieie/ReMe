@@ -227,6 +227,61 @@ class PersonalMemory(BaseMemory):
         )
 
 
+class StateMemory(BaseMemory):
+    """Memory type for storing state-aware experiences.
+
+    StateMemory captures reusable knowledge about observable states, transition
+    signals, checkpoints, recovery conditions, and state-dependent actions.
+
+    Attributes:
+        memory_type: Always set to "state" for state memories.
+        target: State memory pool identifier, e.g. "login_page_state".
+    """
+
+    memory_type: str = Field(default="state")
+    target: str = Field(default="")
+
+    def to_vector_node(self) -> VectorNode:
+        """Convert this StateMemory to a VectorNode."""
+        return VectorNode(
+            unique_id=self.memory_id,
+            workspace_id=self.workspace_id,
+            content=self.when_to_use,
+            metadata={
+                "memory_type": self.memory_type,
+                "content": self.content,
+                "target": self.target,
+                "score": self.score,
+                "time_created": self.time_created,
+                "time_modified": self.time_modified,
+                "author": self.author,
+                "metadata": json.dumps(self.metadata, ensure_ascii=False),
+            },
+        )
+
+    @classmethod
+    def from_vector_node(cls, node: VectorNode) -> "StateMemory":
+        """Create a StateMemory instance from a VectorNode."""
+        metadata = node.metadata.copy()
+        memory_metadata = metadata.pop("metadata", {})
+        if isinstance(memory_metadata, str):
+            memory_metadata = json.loads(memory_metadata)
+
+        return cls(
+            workspace_id=node.workspace_id,
+            memory_id=node.unique_id,
+            memory_type=metadata.pop("memory_type"),
+            when_to_use=node.content,
+            content=metadata.pop("content"),
+            target=metadata.pop("target", ""),
+            score=metadata.pop("score"),
+            time_created=metadata.pop("time_created"),
+            time_modified=metadata.pop("time_modified"),
+            author=metadata.pop("author"),
+            metadata=memory_metadata,
+        )
+
+
 class ToolCallResult(BaseModel):
     """Represents the result of a tool invocation.
 
@@ -462,6 +517,9 @@ def vector_node_to_memory(node: VectorNode):
     elif memory_type == "personal":
         return PersonalMemory.from_vector_node(node)
 
+    elif memory_type == "state":
+        return StateMemory.from_vector_node(node)
+
     elif memory_type == "tool":
         return ToolMemory.from_vector_node(node)
 
@@ -493,6 +551,9 @@ def dict_to_memory(memory_dict: dict):
 
     elif memory_type == "personal":
         return PersonalMemory(**memory_dict)
+
+    elif memory_type == "state":
+        return StateMemory(**memory_dict)
 
     elif memory_type == "tool":
         return ToolMemory(**memory_dict)

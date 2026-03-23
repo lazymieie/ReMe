@@ -8,12 +8,14 @@ This module provides summary operations for different types of memories:
 """
 
 from . import personal
+from . import state
 from . import task
 from . import tool
 from . import working
 
 __all__ = [
     "personal",
+    "state",
     "task",
     "tool",
     "working",

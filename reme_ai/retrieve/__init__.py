@@ -8,12 +8,14 @@ This module provides submodules for different types of memory retrieval:
 """
 
 from . import personal
+from . import state
 from . import task
 from . import tool
 from . import working
 
 __all__ = [
     "personal",
+    "state",
     "task",
     "tool",
     "working",

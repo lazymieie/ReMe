@@ -9,6 +9,8 @@ from ..memory.vector_based import BaseMemoryAgent, ReMeRetriever, ReMeSummarizer
 from ..memory.vector_tools import AddDraftAndRetrieveSimilarMemory, AddHistory, AddMemory, DelegateTask, ReadHistory
 from ..memory.vector_tools.record.retrieve_memory import RetrieveMemory
 
+DEFAULT_STATE_NAME = "default_state"
+
 
 def _ensure_state_target(
     mapping: dict[str, MemoryType],
@@ -16,11 +18,11 @@ def _ensure_state_target(
 ) -> list[str]:
     """Register state target(s) into memory_target_type_mapping."""
     if isinstance(state_name, str):
-        state_names = [state_name]
+        state_names = [state_name or DEFAULT_STATE_NAME]
     elif isinstance(state_name, list):
-        state_names = state_name
+        state_names = [name or DEFAULT_STATE_NAME for name in state_name] or [DEFAULT_STATE_NAME]
     else:
-        raise RuntimeError("state_name must be str or list[str]")
+        state_names = [DEFAULT_STATE_NAME]
 
     for name in state_names:
         if name in mapping:
@@ -44,9 +46,6 @@ class SummaryStateMemory(BaseOp):
 
         if not messages:
             raise ValueError("messages must not be empty")
-        if not state_name:
-            raise ValueError("state_name must not be empty")
-
         format_messages: list[Message] = []
         for message in messages:
             format_messages.append(Message(**message) if isinstance(message, dict) else message)
@@ -112,9 +111,6 @@ class RetrieveStateMemory(BaseOp):
 
         if not query and not messages:
             raise ValueError("Either query or messages must be provided")
-        if not state_name:
-            raise ValueError("state_name must not be empty")
-
         memory_targets = _ensure_state_target(self.service_context.memory_target_type_mapping, state_name)
 
         state_retriever: BaseMemoryAgent = StateRetriever(

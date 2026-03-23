@@ -103,7 +103,7 @@ flows:
             - type: array
               items:
                 type: string
-          description: "Target state memory name or list of state names."
+          description: "Target state memory name or list of state names. Defaults to default_state when omitted or empty."
         description:
           type: string
           description: "Optional description to prepend to retrieval context."
@@ -116,8 +116,7 @@ flows:
         llm_config_name:
           type: string
           description: "LLM config name to use (default: default)."
-      required:
-        - state_name
+      required: []
 
   summary_state_memory:
     flow_content: SummaryStateMemory()
@@ -134,7 +133,7 @@ flows:
             - type: array
               items:
                 type: string
-          description: "Target state memory name or list of state names."
+          description: "Target state memory name or list of state names. Defaults to default_state when omitted or empty."
         description:
           type: string
           description: "Optional description for the message history."
@@ -149,7 +148,6 @@ flows:
           description: "LLM config name to use (default: default)."
       required:
         - messages
-        - state_name
 
   add_task_memory:
     flow_content: MemoryAddition()
