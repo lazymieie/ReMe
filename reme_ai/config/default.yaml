@@ -410,13 +410,13 @@ embedding_model:
     model_name: text-embedding-v4
     # params:
     #   dimensions: 1024
-  my-embed:
+  my_embed:
     backend: openai_compatible
     model_name: my-embed
 
 vector_store:
   default:
     backend: local
-    embedding_model: my-embed
+    embedding_model: my_embed
 #    params:
 #      hosts: "http://localhost:9200"
