@@ -15,7 +15,7 @@ as_token_counters:
 embedding_models:
   default:
     backend: openai
-    dimensions: 1024
+    # dimensions: 1024
     use_dimensions: false
     enable_cache: true
     max_batch_size: 10

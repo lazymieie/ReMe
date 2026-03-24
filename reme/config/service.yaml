@@ -249,7 +249,7 @@ embedding_models:
   default:
     backend: openai
     model_name: text-embedding-v4
-    dimensions: 1024
+    # dimensions: 1024
     enable_cache: false
 
 vector_stores:
