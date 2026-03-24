@@ -150,7 +150,7 @@ class Application:
     def _log_model_config(kind: str, name: str, backend: str, config_dict: dict) -> None:
         """Log the resolved connection config for model-backed components."""
         logger.info(
-            "Resolved %s config: name=%s backend=%s model_name=%s base_url=%s has_api_key=%s",
+            "Resolved {} config: name={} backend={} model_name={} base_url={} has_api_key={}",
             kind,
             name,
             backend,

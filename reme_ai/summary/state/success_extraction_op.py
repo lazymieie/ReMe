@@ -43,7 +43,7 @@ class StateSuccessExtractionOp(BaseAsyncOp):
     async def _extract_from_steps(self, steps: List[Message], trajectory: Trajectory) -> List[BaseMemory]:
         state_name = trajectory.metadata.get("state_name", self.context.get("state_name", DEFAULT_STATE_NAME))
         logger.info(
-            "StateSuccessExtractionOp using llm model=%s base_url=%s state_name=%s step_count=%s",
+            "StateSuccessExtractionOp using llm model={} base_url={} state_name={} step_count={}",
             getattr(self.llm, "model_name", ""),
             getattr(self.llm, "base_url", ""),
             state_name,
