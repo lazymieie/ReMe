@@ -138,6 +138,14 @@ class Application:
         """Get the service configuration."""
         return self.service_context.service_config
 
+    @staticmethod
+    def _apply_model_connection_defaults(config_dict: dict, api_key: str, base_url: str) -> None:
+        """Fill empty model connection settings with application-level defaults."""
+        if not config_dict.get("api_key", ""):
+            config_dict["api_key"] = api_key
+        if not config_dict.get("base_url", ""):
+            config_dict["base_url"] = base_url
+
     async def start(self):
         """Start the service context by initializing all configured components."""
         if self._started:
@@ -199,8 +207,11 @@ class Application:
                 logger.warning(f"LLM backend {config.backend} is not supported.")
             else:
                 config_dict = config.model_dump(exclude={"backend"})
-                config_dict.setdefault("api_key", self.llm_api_key)
-                config_dict.setdefault("base_url", self.llm_base_url)
+                self._apply_model_connection_defaults(
+                    config_dict=config_dict,
+                    api_key=self.llm_api_key,
+                    base_url=self.llm_base_url,
+                )
                 self.service_context.llms[name] = R.llms[config.backend](**config_dict)
                 await self.service_context.llms[name].start()
 
@@ -209,8 +220,11 @@ class Application:
                 logger.warning(f"Embedding model backend {config.backend} is not supported.")
             else:
                 config_dict = config.model_dump(exclude={"backend"})
-                config_dict.setdefault("api_key", self.embedding_api_key)
-                config_dict.setdefault("base_url", self.embedding_base_url)
+                self._apply_model_connection_defaults(
+                    config_dict=config_dict,
+                    api_key=self.embedding_api_key,
+                    base_url=self.embedding_base_url,
+                )
                 config_dict.setdefault("cache_dir", working_path / "embedding_cache")
                 self.service_context.embedding_models[name] = R.embedding_models[config.backend](**config_dict)
                 await self.service_context.embedding_models[name].start()
@@ -340,8 +354,11 @@ class Application:
                     logger.warning(f"LLM backend {config.backend} is not supported.")
                     continue
                 config_dict = config.model_dump(exclude={"backend"})
-                config_dict.setdefault("api_key", self.llm_api_key)
-                config_dict.setdefault("base_url", self.llm_base_url)
+                self._apply_model_connection_defaults(
+                    config_dict=config_dict,
+                    api_key=self.llm_api_key,
+                    base_url=self.llm_base_url,
+                )
                 self.service_context.llms[name] = R.llms[config.backend](**config_dict)
                 await self.service_context.llms[name].start()
                 logger.info(f"Restarted LLM: {name}")
@@ -362,8 +379,11 @@ class Application:
                     logger.warning(f"Embedding model backend {config.backend} is not supported.")
                     continue
                 config_dict = config.model_dump(exclude={"backend"})
-                config_dict.setdefault("api_key", self.embedding_api_key)
-                config_dict.setdefault("base_url", self.embedding_base_url)
+                self._apply_model_connection_defaults(
+                    config_dict=config_dict,
+                    api_key=self.embedding_api_key,
+                    base_url=self.embedding_base_url,
+                )
                 config_dict.setdefault("cache_dir", working_path / "embedding_cache")
                 self.service_context.embedding_models[name] = R.embedding_models[config.backend](**config_dict)
                 await self.service_context.embedding_models[name].start()
