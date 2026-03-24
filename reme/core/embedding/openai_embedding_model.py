@@ -39,8 +39,8 @@ class OpenAIEmbeddingModel(BaseEmbeddingModel):
             **self.kwargs,
             **kwargs,
         }
-        if self.use_dimensions:
-            create_kwargs["dimensions"] = self.dimensions
+        # if self.use_dimensions:
+        #     create_kwargs["dimensions"] = self.dimensions
 
         logger.info(
             "Embedding request params: model={} use_dimensions={} dimensions={} keys={}",

@@ -21,8 +21,8 @@ class OpenAIEmbeddingModelSync(OpenAIEmbeddingModel):
             **self.kwargs,
             **kwargs,
         }
-        if self.use_dimensions:
-            create_kwargs["dimensions"] = self.dimensions
+        # if self.use_dimensions:
+        #     create_kwargs["dimensions"] = self.dimensions
 
         completion = self.client.embeddings.create(**create_kwargs)
 
