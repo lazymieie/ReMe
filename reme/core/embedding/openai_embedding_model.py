@@ -3,6 +3,7 @@
 from typing import Literal
 
 from openai import AsyncOpenAI
+from loguru import logger
 
 from .base_embedding_model import BaseEmbeddingModel
 
@@ -40,6 +41,14 @@ class OpenAIEmbeddingModel(BaseEmbeddingModel):
         }
         if self.use_dimensions:
             create_kwargs["dimensions"] = self.dimensions
+
+        logger.info(
+            "Embedding request params: model={} use_dimensions={} dimensions={} keys={}",
+            self.model_name,
+            self.use_dimensions,
+            self.dimensions,
+            sorted(create_kwargs.keys()),
+        )
 
         completion = await self.client.embeddings.create(**create_kwargs)
 
