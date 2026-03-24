@@ -42,6 +42,7 @@ class RetrieveStateMemoryOp(BaseAsyncOp):
             logger.warning("query is empty, skipping processing")
             self.context.response.answer = "query is required"
             self.context.response.success = False
+            self.context.response.metadata["memory_list"] = []
             return
 
         logger.info(f"workspace_id={workspace_id} retrieving state memory for target={state_name}, top_k={top_k}")
@@ -70,6 +71,7 @@ class RetrieveStateMemoryOp(BaseAsyncOp):
             logger.info("No matching state memories found")
             self.context.response.answer = "No matching state memories found"
             self.context.response.success = False
+            self.context.response.metadata["memory_list"] = []
             return
 
         self.context.response.answer = self._format_state_memories(matched_state_memories)

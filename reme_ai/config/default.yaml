@@ -50,8 +50,8 @@ flow:
         required: false
 
   retrieve_state_memory:
-    flow_content: RetrieveStateMemoryOp()
-    description: "Retrieves relevant state memories from historical data based on query and state target"
+    flow_content: BuildStateQueryOp(enable_llm_build=True) >> RetrieveStateMemoryOp() >> StateRerankMemoryOp(enable_llm_rerank=True, enable_score_filter=False) >> StateRewriteMemoryOp(enable_llm_rewrite=True)
+    description: "Retrieves, reranks, and rewrites state memories from historical data based on query and state target"
     input_schema:
       workspace_id:
         type: string
@@ -64,7 +64,11 @@ flow:
       query:
         type: string
         description: "user query"
-        required: true
+        required: false
+      messages:
+        type: array
+        description: "Optional message list used to build a state-aware query when query is omitted"
+        required: false
       top_k:
         type: integer
         description: "maximum number of state memories to return"

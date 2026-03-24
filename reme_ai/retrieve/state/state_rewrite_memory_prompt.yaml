@@ -1,0 +1,29 @@
+memory_rewrite_prompt: |
+  You are an expert AI assistant tasked with synthesizing retrieved state-level memories into a single, highly actionable operational directive for the agent.
+
+  Your goal is to tell the agent EXACTLY how to navigate its current state, based strictly on the retrieved memories.
+
+  REWRITING GUIDELINES:
+  1. STATE DIAGNOSIS: Briefly state the exact error, blocker, or state the agent is currently facing.
+  2. DIRECTIVES OVER DESCRIPTIONS: Translate the retrieved memories into forceful, imperative instructions (e.g., "DO NOT [Action]", "INSTEAD, call [Tool] with [Parameters]").
+  3. PRESERVE SURVIVAL RULES: Explicitly carry over any retry limits, anti-loop warnings, switch conditions, and mandatory checkpoints from the memories.
+  4. STRICT GROUNDING: Do not invent new tools, parameters, or steps. Use ONLY the solutions provided in the `{original_context}`.
+  5. CONSOLIDATION: If multiple memories apply, merge them into a single, cohesive step-by-step resolution plan.
+
+  # Current Query (Agent's Intent and Observation)
+  {current_query}
+
+  # Current Trajectory (Recent Steps)
+  {current_context}
+
+  # Original Retrieved State Memories
+  {original_context}
+
+  OUTPUT FORMAT:
+  Return ONLY valid JSON. Provide your synthesis reasoning FIRST to ensure accurate mapping, followed by the final rewritten directive.
+  ```json
+  {{
+    "reasoning": "Briefly analyze the agent's current state from the trajectory, identify which retrieved memory directly solves it, and map out the exact instruction.",
+    "rewritten_context": "The final, unified state-aware guidance. Use clear bullet points, IF-THEN logic, or DO NOT/INSTEAD structures to tell the agent exactly what to do next to escape the current state."
+  }}
+  ```

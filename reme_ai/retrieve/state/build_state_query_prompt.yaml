@@ -1,0 +1,20 @@
+query_build: |
+  You are an expert AI agent generating a search query to retrieve state-level experience from a vector database.
+
+  # Execution Process
+  {execution_process}
+
+  Read through the execution process and identify the agent's current operational state.
+  Generate a concise retrieval `query` for state memory search.
+
+  CRITICAL ALIGNMENT (SYMMETRIC SEARCH):
+  The vector database stores memory keys in this exact declarative format: 
+  "The agent is trying to [Intent] and observed [Specific State/Error/Signal]."
+  Your generated query MUST strictly match this exact format and wording to ensure high cosine similarity. 
+  DO NOT ask questions. DO NOT guess the resolution or next action (because you are searching for the resolution).
+
+  Requirements:
+  1. Intent: Briefly state what the agent is currently trying to accomplish based on the execution process.
+  2. Observation/Trigger: Explicitly state the exact error message, blocking signal, transition cue, or UI state currently observed.
+  3. Loop/Stuck State: If the agent is stuck in a retry loop, explicitly mention the repeated failure signal.
+  4. Output ONLY the query text starting with "The agent is trying to...". Do not output markdown, prefixes, or extra text.

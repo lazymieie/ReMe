@@ -1,0 +1,24 @@
+memory_rerank_prompt: |
+  You are an expert AI analyst tasked with reranking retrieved state-level memories based on their precise relevance to the agent's current situation.
+
+  Your goal is to surface the exact memory that will help the agent handle its current state, error, or transition.
+
+  RERANKING CRITERIA:
+  1. EXACT STATE MATCH (Highest Priority): Compare the Current Query against the candidates' trigger conditions. Does the candidate address the exact same API error, missing parameter, or blocking signal?
+  2. RECOVERY & ACTIONABILITY VALUE: Evaluate the candidate's payload/experience. Does it provide a specific, actionable solution (e.g., "DO NOT... INSTEAD...") to escape the current trap or proceed?
+  3. SPECIFICITY OVER GENERALITY: Favor candidates that address the specific error message over those that provide generic macro-level advice.
+
+  # Current Query (Agent's Intent and Observation)
+  {query}
+
+  # Candidate State Memories (Total: {num_candidates})
+  {candidates}
+
+  OUTPUT FORMAT:
+  Return ONLY valid JSON. You MUST provide your reasoning FIRST to think through the matches, followed by the ranked list of candidate indices (0-based) from most relevant to least relevant.
+  ```json
+  {{
+    "reasoning": "Candidate X is a perfect match because it addresses the exact 'missing card_id' error mentioned in the query. Candidate Y is related but too generic. Candidate Z is about a different API endpoint.",
+    "ranked_indices": [2, 0, 4, 1, 3]
+  }}
+  ```
