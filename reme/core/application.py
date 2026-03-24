@@ -146,6 +146,19 @@ class Application:
         if not config_dict.get("base_url", ""):
             config_dict["base_url"] = base_url
 
+    @staticmethod
+    def _log_model_config(kind: str, name: str, backend: str, config_dict: dict) -> None:
+        """Log the resolved connection config for model-backed components."""
+        logger.info(
+            "Resolved %s config: name=%s backend=%s model_name=%s base_url=%s has_api_key=%s",
+            kind,
+            name,
+            backend,
+            config_dict.get("model_name", ""),
+            config_dict.get("base_url", ""),
+            bool(config_dict.get("api_key", "")),
+        )
+
     async def start(self):
         """Start the service context by initializing all configured components."""
         if self._started:
@@ -212,6 +225,7 @@ class Application:
                     api_key=self.llm_api_key,
                     base_url=self.llm_base_url,
                 )
+                self._log_model_config("llm", name, config.backend, config_dict)
                 self.service_context.llms[name] = R.llms[config.backend](**config_dict)
                 await self.service_context.llms[name].start()
 
@@ -226,6 +240,7 @@ class Application:
                     base_url=self.embedding_base_url,
                 )
                 config_dict.setdefault("cache_dir", working_path / "embedding_cache")
+                self._log_model_config("embedding", name, config.backend, config_dict)
                 self.service_context.embedding_models[name] = R.embedding_models[config.backend](**config_dict)
                 await self.service_context.embedding_models[name].start()
 
@@ -359,6 +374,7 @@ class Application:
                     api_key=self.llm_api_key,
                     base_url=self.llm_base_url,
                 )
+                self._log_model_config("llm", name, config.backend, config_dict)
                 self.service_context.llms[name] = R.llms[config.backend](**config_dict)
                 await self.service_context.llms[name].start()
                 logger.info(f"Restarted LLM: {name}")
@@ -385,6 +401,7 @@ class Application:
                     base_url=self.embedding_base_url,
                 )
                 config_dict.setdefault("cache_dir", working_path / "embedding_cache")
+                self._log_model_config("embedding", name, config.backend, config_dict)
                 self.service_context.embedding_models[name] = R.embedding_models[config.backend](**config_dict)
                 await self.service_context.embedding_models[name].start()
                 logger.info(f"Restarted embedding model: {name}")
