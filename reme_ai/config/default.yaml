@@ -408,11 +408,13 @@ embedding_model:
   default:
     backend: openai_compatible
     model_name: text-embedding-v4
+    use_dimensions: false
     # params:
     #   dimensions: 1024
   my_embed:
     backend: openai_compatible
     model_name: my-embed
+    use_dimensions: false
 
 vector_store:
   default:
