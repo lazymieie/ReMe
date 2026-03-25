@@ -6,7 +6,7 @@ into context messages that can be used by LLMs for task completion.
 
 import json
 import re
-from typing import List
+from typing import Any, List
 
 from flowllm.core.context import C
 from flowllm.core.enumeration import Role
@@ -112,10 +112,11 @@ class RewriteMemoryOp(BaseAsyncOp):
 
             # Extract rewritten context
             rewritten_context = self._parse_json_response(response.content, "rewritten_context")
+            normalized_rewritten_context = self._normalize_rewritten_context(rewritten_context)
 
-            if rewritten_context and rewritten_context.strip():
+            if normalized_rewritten_context and normalized_rewritten_context.strip():
                 logger.info("Context successfully rewritten for current task")
-                return rewritten_context.strip()
+                return normalized_rewritten_context.strip()
 
             return context_content
 
@@ -172,7 +173,7 @@ class RewriteMemoryOp(BaseAsyncOp):
         return "\n\n".join(context_parts)
 
     @staticmethod
-    def _parse_json_response(response: str, key: str) -> str:
+    def _parse_json_response(response: str, key: str) -> Any:
         """Parse JSON response to extract specific key.
 
         Args:
@@ -203,3 +204,26 @@ class RewriteMemoryOp(BaseAsyncOp):
             return response.strip()
 
         return ""
+
+    @staticmethod
+    def _normalize_rewritten_context(value: Any) -> str:
+        """Normalize structured LLM output into a plain text context string."""
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value
+        if isinstance(value, list):
+            normalized_items = [RewriteMemoryOp._normalize_rewritten_context(item).strip() for item in value]
+            return "\n".join(item for item in normalized_items if item)
+        if isinstance(value, dict):
+            for key in ("rewritten_context", "final", "answer", "content", "text", "message"):
+                if key in value:
+                    normalized_value = RewriteMemoryOp._normalize_rewritten_context(value[key]).strip()
+                    if normalized_value:
+                        return normalized_value
+            for nested_value in value.values():
+                normalized_value = RewriteMemoryOp._normalize_rewritten_context(nested_value).strip()
+                if normalized_value:
+                    return normalized_value
+            return json.dumps(value, ensure_ascii=False)
+        return str(value)

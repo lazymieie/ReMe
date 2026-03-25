@@ -188,6 +188,13 @@ class RerankMemoryOp(BaseAsyncOp):
                 elif isinstance(parsed, list):
                     return parsed
 
+            # Fallback: try to parse the entire response as JSON
+            parsed = json.loads(response)
+            if isinstance(parsed, dict) and "ranked_indices" in parsed:
+                return parsed["ranked_indices"]
+            elif isinstance(parsed, list):
+                return parsed
+
             # Try to extract numbers from text
             numbers = re.findall(r"\b\d+\b", response)
             return [int(num) for num in numbers if int(num) < 100]  # Reasonable upper bound

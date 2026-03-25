@@ -10,6 +10,7 @@ from reme_ai.retrieve.state.build_state_query_op import BuildStateQueryOp
 from reme_ai.retrieve.state.retrieve_state_memory_op import RetrieveStateMemoryOp
 from reme_ai.retrieve.state.state_rewrite_memory_op import StateRewriteMemoryOp
 from reme_ai.retrieve.state.state_rerank_memory_op import StateRerankMemoryOp
+from reme_ai.retrieve.task.rerank_memory_op import RerankMemoryOp
 from reme_ai.schema.memory import StateMemory
 
 
@@ -123,6 +124,18 @@ def test_state_rerank_memory_formats_candidates_with_state_content():
     assert "Experience: 停止重试" in formatted
 
 
+def test_rerank_response_parses_raw_json_before_falling_back_to_numbers():
+    """Raw JSON rerank responses with reasoning should not be polluted by stray numbers."""
+    response = (
+        '{"reasoning":"Candidate 2 best matches. Candidate 0 is second.",'
+        '"ranked_indices":[2,0,1]}'
+    )
+
+    parsed = RerankMemoryOp._parse_rerank_response(response)
+
+    assert parsed == [2, 0, 1]
+
+
 def test_state_rewrite_memory_formats_state_guidance():
     """State rewrite op should expose trigger/action structure even without LLM rewrite."""
     memories = [
@@ -137,6 +150,28 @@ def test_state_rewrite_memory_formats_state_guidance():
 
     assert "Observed State / Trigger: 登录页停留原地且出现验证码" in formatted
     assert "Implication / Recommended Action: 停止重复提交" in formatted
+
+
+def test_rewrite_memory_normalizes_structured_rewritten_context():
+    """Structured rewritten_context payloads should not break string post-processing."""
+    normalized = StateRewriteMemoryOp._normalize_rewritten_context(
+        {"summary": "停止重复提交", "next_step": "先处理验证码"},
+    )
+
+    assert "停止重复提交" in normalized
+    assert "先处理验证码" in normalized
+
+
+def test_rewrite_memory_prefers_final_text_fields():
+    """Structured payloads should extract the final user-facing text instead of raw JSON."""
+    normalized = StateRewriteMemoryOp._normalize_rewritten_context(
+        {
+            "reasoning": "当前状态被验证码阻塞。",
+            "content": "停止重复提交，先完成验证码，再检查页面状态。",
+        },
+    )
+
+    assert normalized == "停止重复提交，先完成验证码，再检查页面状态。"
 
 
 @pytest.mark.asyncio
